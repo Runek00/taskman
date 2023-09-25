@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 var nextTaskId int = 0
-var taskStore []Task = make([]Task, 0)
+var taskStore map[int]Task = make(map[int]Task)
 
 type Task struct {
 	id        int
@@ -19,7 +19,7 @@ func createTask(title string) Task {
 
 func addTask(title string) Task {
 	task := createTask(title)
-	taskStore = append(taskStore, task)
+	taskStore[task.id] = task
 	return task
 }
 
@@ -30,13 +30,13 @@ func showTasks() {
 }
 
 func completeTask(id int) {
-	for i, t := range taskStore {
-		if t.id == id {
-			t.completed = true
-			taskStore[i] = t
-			break
-		}
-	}
+	t := taskStore[id]
+	t.completed = true
+	taskStore[id] = t
+}
+
+func deleteTask(id int) {
+	delete(taskStore, id)
 }
 
 func main() {
@@ -47,5 +47,6 @@ func main() {
 	addTask("t")
 	addTask("y")
 	completeTask((3))
+	deleteTask(4)
 	showTasks()
 }
