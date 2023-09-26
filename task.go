@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -12,9 +13,9 @@ var nextTaskId int = 0
 var taskStore map[int]Task = make(map[int]Task)
 
 type Task struct {
-	id        int
-	title     string
-	completed bool
+	Id        int
+	Title     string
+	Completed bool
 }
 
 func createTask(title string) Task {
@@ -25,13 +26,13 @@ func createTask(title string) Task {
 
 func addTask(title string) Task {
 	task := createTask(title)
-	taskStore[task.id] = task
+	taskStore[task.Id] = task
 	return task
 }
 
 func showTasks() {
 	for _, t := range taskStore {
-		fmt.Printf("\nID: %v	Title: %v	Completed: %v", t.id, t.title, t.completed)
+		fmt.Printf("\nID: %v	Title: %v	Completed: %v", t.Id, t.Title, t.Completed)
 	}
 }
 
@@ -41,7 +42,7 @@ func completeTask(id int) {
 		fmt.Print("No such task")
 		return
 	}
-	t.completed = true
+	t.Completed = true
 	taskStore[id] = t
 }
 
@@ -55,6 +56,7 @@ func deleteTask(id int) {
 }
 
 func interactive() {
+	load()
 	for {
 		fmt.Print("\nWhat do you want to do?\n(add) add task\n(del) delete task\n(com) complete task\n(show) show tasks\n(exit) exit\n")
 		reader := bufio.NewReader(os.Stdin)
@@ -73,6 +75,7 @@ func interactive() {
 			showTasks()
 		case "exit":
 			fmt.Print("BAIII!\n")
+			save()
 			return
 		default:
 			fmt.Print("No such option\n")
@@ -106,15 +109,47 @@ func getId() int {
 	return inn
 }
 
+func save() {
+	marshaled, err := json.Marshal(taskStore)
+	if err != nil {
+		fmt.Print(err)
+		return
+	}
+	err = os.WriteFile("store.json", marshaled, 0777)
+	if err != nil {
+		fmt.Print(err)
+		return
+	}
+}
+
+func load() {
+	marshaled, err := os.ReadFile("store.json")
+	if err != nil {
+		fmt.Print(err)
+		return
+	}
+	err = json.Unmarshal(marshaled, &taskStore)
+	if err != nil {
+		fmt.Print(err)
+		return
+	}
+	for k := range taskStore {
+		if k >= nextTaskId {
+			nextTaskId = k + 1
+		}
+	}
+
+}
+
 func main() {
-	addTask("q")
-	addTask("w")
-	addTask("e")
-	addTask("r")
-	addTask("t")
-	addTask("y")
-	completeTask((3))
-	deleteTask(4)
+	// For testing
+	// addTask("q")
+	// addTask("w")
+	// addTask("e")
+	// addTask("r")
+	// addTask("t")
+	// addTask("y")
+	// completeTask((3))
 	showTasks()
 	interactive()
 }
